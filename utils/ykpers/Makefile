@@ -1,23 +1,24 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ykpers
-PKG_VERSION:=1.19.0
-PKG_RELEASE:=1
+PKG_VERSION:=1.20.0
+PKG_RELEASE:=3
 
-PKG_SOURCE:=ykpers-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://developers.yubico.com/yubikey-personalization/Releases
-PKG_HASH:=2bc8afa16d495a486582bad916d16de1f67c0cce9bb0a35c3123376c2d609480
-PKG_MAINTAINER:=Stuart B. Wilkins <stuwilkins@mac.com>
-PKG_LICENSE_FILES:=COPYING
-PKG_LICENSE:=BSD-2-Clause
+PKG_HASH:=0ec84d0ea862f45a7d85a1a3afe5e60b8da42df211bb7d27a50f486e31a79b93
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/ykpers-$(PKG_VERSION)
-PKG_BUILD_DEPENDS:=libyubikey
+PKG_MAINTAINER:=Stuart B. Wilkins <stuwilkins@mac.com>
+PKG_LICENSE:=BSD-2-Clause
+PKG_LICENSE_FILES:=COPYING
+
+PKG_INSTALL:=1
+PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/ykpers
-  SECTION:=utils	
+  SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=The Yuibco personalization package
   URL:=https://developers.yubico.com/yubikey-personalization/
@@ -25,7 +26,7 @@ define Package/ykpers
 endef
 
 define Package/ykpers/description
-	The YubiKey Personalization package contains a library and command 
+	The YubiKey Personalization package contains a library and command
 	line tool used to personalize (i.e., set a AES key) YubiKeys.
 endef
 
@@ -33,22 +34,22 @@ CONFIGURE_ARGS += \
 	--enable-shared \
 	--disable-static
 
-
 define Build/InstallDev
-	$(INSTALL_DIR) $(STAGING_DIR)/usr/include
-	$(CP) $(PKG_BUILD_DIR)/ykcore/*.h $(STAGING_DIR)/usr/include
-	$(CP) $(PKG_BUILD_DIR)/*.h $(STAGING_DIR)/usr/include
+	$(INSTALL_DIR) $(STAGING_DIR)/usr/include/ykpers-1
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/ykpers-1/*.h $(STAGING_DIR)/usr/include/ykpers-1
 	$(INSTALL_DIR) $(STAGING_DIR)/usr/lib
-	$(CP) $(PKG_BUILD_DIR)/.libs/libykpers-1.so* $(STAGING_DIR)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libykpers-1.so* $(STAGING_DIR)/usr/lib
+	$(INSTALL_DIR) $(STAGING_DIR)/usr/lib/pkgconfig
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/ykpers-1.pc $(STAGING_DIR)/usr/lib/pkgconfig
 endef
 
 define Package/ykpers/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/.libs/ykchalresp $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/.libs/ykinfo $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/.libs/ykpersonalize $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ykchalresp $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ykinfo $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ykpersonalize $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_BUILD_DIR)/.libs/libykpers-1.so* $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libykpers-1.so* $(1)/usr/lib
 endef
 
 $(eval $(call BuildPackage,ykpers))

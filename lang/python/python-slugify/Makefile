@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 CZ.NIC, z. s. p. o. (https://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z. s. p. o. (https://www.nic.cz/)
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,17 +8,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=python-slugify
-PKG_VERSION:=3.0.1
-PKG_RELEASE:=1
+PKG_VERSION:=4.0.0
+PKG_RELEASE:=2
 
-PKG_SOURCE:=python-slugify-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://files.pythonhosted.org/packages/source/p/python-slugify/
-PKG_HASH:=492b27e5a12495340e50652ab4eab3a229ef7167c44b66b3a2861450e68b269a
+PYPI_NAME:=$(PKG_NAME)
+PKG_HASH:=a8fc3433821140e8f409a9831d13ae5deccd0b033d4744d94b31fea141bdd84c
 
 PKG_MAINTAINER:=Josef Schlehofer <josef.schlehofer@nic.cz>
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 
+include ../pypi.mk
 include $(INCLUDE_DIR)/package.mk
 include ../python3-package.mk
 
@@ -28,14 +28,15 @@ define Package/python3-slugify
   SUBMENU:=Python
   TITLE:=Slugify application that handles Unicode
   URL:=https://github.com/un33k/python-slugify
-  DEPENDS+= \
-      +python3-light \
-      +python3-text-unidecode
-  VARIANT:=python3
+  DEPENDS:= \
+    +python3-light \
+    +python3-codecs \
+    +python3-setuptools \
+    +python3-text-unidecode
 endef
 
 define Package/python3-slugify/description
-A Python slugify application that handles unicode.
+  A Python slugify application that handles unicode.
 endef
 
 $(eval $(call Py3Package,python3-slugify))

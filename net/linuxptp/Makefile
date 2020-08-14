@@ -8,18 +8,19 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=linuxptp
-PKG_VERSION:=2.0
-PKG_RELEASE:=1
+PKG_VERSION:=3.0
+PKG_RELEASE:=3
 
-PKG_MAINTAINER:=Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tgz
 PKG_SOURCE_URL:=@SF/$(PKG_NAME)/v$(PKG_VERSION)
-PKG_HASH:=0a24d9401e87d4af023d201e234d91127d82c350daad93432106284aa9459c7d
+PKG_HASH:=d74ceca722c75bfff53c633425f926dd48eb04f4a089451b855155c016d15785
 
+PKG_MAINTAINER:=Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYING
 
 include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/kernel.mk
 
 define Package/linuxptp
   SECTION:=net
@@ -27,7 +28,6 @@ define Package/linuxptp
   SUBMENU:=Time Synchronization
   TITLE:=Linux Precision Time Protocol (PTP) daemon
   URL:=http://linuxptp.sourceforge.net/
-  DEPENDS:=@!USE_UCLIBC +librt
 endef
 
 define Package/linuxptp/description
@@ -40,7 +40,8 @@ endef
 EXTRA_CFLAGS += -DHAVE_CLOCK_ADJTIME -DHAVE_POSIX_SPAWN -DHAVE_ONESTEP_SYNC
 
 MAKE_VARS += \
-	EXTRA_CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) $(EXTRA_CFLAGS)"
+	EXTRA_CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) $(EXTRA_CFLAGS)" \
+	KBUILD_OUTPUT="$(LINUX_DIR)"
 
 define Package/linuxptp/install
 	$(INSTALL_DIR) $(1)/usr/sbin

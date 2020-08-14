@@ -9,21 +9,21 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=xtables-addons
-PKG_VERSION:=2.14
-PKG_RELEASE:=6
-PKG_HASH:=d215a9a8b8e66aae04b982fa2e1228e8a71e7dfe42320df99e34e5000cbdf152
+PKG_VERSION:=3.10
+PKG_RELEASE:=1
+PKG_HASH:=b783ecbab46ff3534a0aaff2baacc79553f685697b1f034ca61698443b8210dc
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=@SF/xtables-addons
+PKG_SOURCE_URL:=https://inai.de/files/xtables-addons/
 PKG_BUILD_DEPENDS:=iptables
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=1
-PKG_CHECK_FORMAT_SECURITY:=0
 
 PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
 PKG_LICENSE:=GPL-2.0
 
 PKG_FIXUP:=autoreconf
+PKG_ASLR_PIE:=0
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -32,15 +32,24 @@ define Package/xtables-addons
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=Extensions not distributed in the main Xtables
-  URL:=http://xtables-addons.sourceforge.net/
+  URL:=https://inai.de/projects/xtables-addons/
 endef
 
 # uses GNU configure
 
 CONFIGURE_ARGS+= \
 	--with-kbuild="$(LINUX_DIR)" \
-	--with-xtlibdir="/usr/lib/iptables" \
+	--with-xtlibdir="/usr/lib/iptables"
 
+ifdef CONFIG_EXTERNAL_TOOLCHAIN
+MAKE_FLAGS:= \
+	$(patsubst ARCH=%,ARCH=$(LINUX_KARCH),$(MAKE_FLAGS)) \
+	DEPMOD="/bin/true"
+
+MAKE_INSTALL_FLAGS:= \
+	$(patsubst ARCH=%,ARCH=$(LINUX_KARCH),$(MAKE_FLAGS)) \
+	DEPMOD="/bin/true"
+else
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
 		$(KERNEL_MAKE_FLAGS) \
@@ -56,6 +65,7 @@ define Build/Install
 		DEPMOD="/bin/true" \
 		install
 endef
+endif
 
 # 1: extension/module suffix used in package name
 # 2: extension/module display name used in package title/description
@@ -123,11 +133,10 @@ define Package/iptgeoip
   $(call Package/xtables-addons)
   CATEGORY:=Network
   TITLE:=iptables-mod-geoip support scripts for MaxMind GeoIP databases
-  # we could also use wget-nossl but that's more complicated than our
-  # syntax of dependencies permits...
   DEPENDS:=iptables +iptables-mod-geoip \
 		+perl +perlbase-getopt +perlbase-io +perl-text-csv_xs \
-		+!BUSYBOX_CONFIG_WGET:wget +!BUSYBOX_CONFIG_GZIP:gzip +!BUSYBOX_CONFIG_UNZIP:unzip
+		+perl-net-cidr-lite \
+		+wget-ssl +!BUSYBOX_CONFIG_ZCAT:gzip
 endef
 
 define Package/iptgeoip/install
@@ -160,6 +169,7 @@ $(eval $(call BuildTemplate,length2,length2,xt_length2,xt_length2,+kmod-ipt-comp
 $(eval $(call BuildTemplate,logmark,LOGMARK,xt_LOGMARK,xt_LOGMARK,+kmod-ipt-compat-xtables))
 $(eval $(call BuildTemplate,lscan,lscan,xt_lscan,xt_lscan,))
 $(eval $(call BuildTemplate,lua,Lua PacketScript,xt_LUA,LUA/xt_LUA,+kmod-ipt-conntrack-extra))
+$(eval $(call BuildTemplate,proto,PROTO,xt_PROTO,xt_PROTO,))
 $(eval $(call BuildTemplate,psd,psd,xt_psd,xt_psd,))
 $(eval $(call BuildTemplate,quota2,quota2,xt_quota2,xt_quota2,))
 $(eval $(call BuildTemplate,sysrq,SYSRQ,xt_SYSRQ,xt_SYSRQ,+kmod-ipt-compat-xtables +kmod-crypto-hash))

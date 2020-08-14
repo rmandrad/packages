@@ -32,6 +32,8 @@ Section type `server` is for definition of remote shadowsocks servers.  They wil
 
 Section type `ss_local`, `ss_redir`, `ss_tunnel` are for specification of shadowsocks-libev components.  They share mostly a common set of options like `local_port`, `verbose`, `fast_open`, `timeout`, etc.
 
+Plugin options should be specified in `server` section and will be inherited by other compoenents referring to it.
+
 We can have multiple instances of component and `server` sections.  The relationship between them is many-to-one.  This will have the following implications
 
  - It's possible to have both `ss_local` and `ss_redir` referring to the same `server` definition
@@ -74,6 +76,14 @@ Bool option `dst_forward_recentrst` requires iptables/netfilter `recent` match m
 ss-rules uses kernel ipset mechanism for storing addresses/networks.  Those ipsets are also part of the API and can be populated by other programs, e.g. dnsmasq with builtin ipset support.  For more details please read output of `ss-rules --help`
 
 Note also that `src_ips_xx` and `dst_ips_xx` actually also accepts cidr network representation.  Option names are retained in its current form for backward compatibility coniderations
+
+# incompatible changes
+
+| Commit date | Commit ID | Subject | Comment |
+| ----------- | --------- | ------- | ------- |
+| 2020-08-03  | 7d7cbae75 | shadowsocks-libev: support ss-server option local_address_{v4,v6} | ss_server bind_address now deprecated, use local_address |
+| 2019-05-09  | afe7d3424 | shadowsocks-libev: move plugin options to server section | This is a revision against c19e949 committed 2019-05-06 |
+| 2017-07-02  | b61af9703 | shadowsocks-libev: rewrite | Packaging of shadowsocks-libev was rewritten from scratch |
 
 # notes and faq
 
@@ -156,11 +166,15 @@ Check if things are in place
 	netstat -lntp | grep -E '8053|1100'
 	ps ww | grep ss-
 
-Edit `/etc/config/dhcp`, add a line to the first dnsmasq section like the following to let it use local tunnel endpoint for upstream dns query
+Edit `/etc/config/dhcp`, making sure options are present in the first dnsmasq section like the following to let it use local tunnel endpoint for upstream dns query.
+Option `noresolv` instructs dnsmasq to not use other dns servers like advertised by local isp.
+Option `localuse` intends to make sure the device you are configuring also uses this dnsmasq instance as the resolver, not the ones from other sources.
 
 	config dnsmasq
 		...
 		list server '127.0.0.1#8053'
+		option noresolv 1
+		option localuse 1
 
 Restart dnsmasq
 

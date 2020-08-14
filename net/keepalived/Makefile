@@ -8,15 +8,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=keepalived
-PKG_VERSION:=2.0.14
-PKG_RELEASE:=1
+PKG_VERSION:=2.0.20
+PKG_RELEASE:=4
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://www.keepalived.org/software
-PKG_HASH:=1bf586e56ee38b47b82f2a27b27e04d0e5b23f1810db6a8e801bde9d3eb8617b
+PKG_SOURCE_URL:=https://www.keepalived.org/software
+PKG_HASH:=9670fbc5eb3dc113828be8b702549dc68ec9578cf83287520d935be76fc8f193
 
 PKG_CPE_ID:=cpe:/a:keepalived:keepalived
-PKG_LICENSE:=GPL-2.0+
+PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING
 PKG_MAINTAINER:=Ben Kelly <ben@benjii.net> \
 		Florian Eckert <fe@dev.tdt.de>
@@ -86,7 +86,9 @@ endef
 
 CONFIGURE_ARGS+= \
 	--with-init=SYSV \
-	--disable-nftables
+	--disable-nftables \
+	--disable-track-process \
+	--with-run-dir="/var/run"
 
 ifeq ($(CONFIG_KEEPALIVED_VRRP),)
 CONFIGURE_ARGS += \
@@ -213,6 +215,10 @@ define Package/keepalived/install
 	$(INSTALL_DIR) $(1)/etc/keepalived
 	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/keepalived/keepalived.conf \
 		$(1)/etc/keepalived/
+
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/etc/uci-defaults/keepalived \
+		$(1)/etc/uci-defaults/keepalived
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/keepalived.init \

@@ -8,20 +8,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=zabbix
-PKG_VERSION:=4.0.3
+PKG_VERSION:=5.0.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=6b3d3b23c72a7af1958dc0938a566be03f0424cb44df5b2a9f487428f32d0463
-PKG_SOURCE_URL:=@SF/zabbix
+PKG_SOURCE_URL:=https://cdn.zabbix.com/zabbix/sources/stable/5.0/
+PKG_HASH:=20a19e5cf2354ffcbbe24521b04becfc9875e57289c00da71999de60c4a853b6
 
+PKG_MAINTAINER:=Etienne CHAMPETIER <champetier.etienne@gmail.com>
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYING
 PKG_CPE_ID:=cpe:/a:zabbix:zabbix
 
 PKG_INSTALL:=1
-
-PKG_FIXUP:=autoreconf
+PKG_BUILD_PARALLEL:=1
 
 PKG_CONFIG_DEPENDS:= \
   CONFIG_ZABBIX_GNUTLS \
@@ -70,10 +70,9 @@ endef
 define Package/zabbix/Default
   SECTION:=admin
   CATEGORY:=Administration
+  SUBMENU:=Zabbix
   TITLE:=Zabbix
   URL:=https://www.zabbix.com/
-  SUBMENU:=zabbix
-  MAINTAINER:=Etienne CHAMPETIER <champetier.etienne@gmail.com>
   USERID:=zabbix=53:zabbix=53
   DEPENDS += $(ICONV_DEPENDS) +libpcre +zlib +ZABBIX_GNUTLS:libgnutls +ZABBIX_OPENSSL:libopenssl
 endef
@@ -128,7 +127,7 @@ endef
 define Package/zabbix-proxy
   $(call Package/zabbix/Default)
   TITLE+= proxy
-  DEPENDS += +ZABBIX_POSTGRESQL:libpq +ZABBIX_MYSQL:libmariadbclient
+  DEPENDS += +ZABBIX_POSTGRESQL:libpq +ZABBIX_MYSQL:libmariadbclient +libevent2
 endef
 
 define Package/zabbix-extra-mac80211/description
@@ -159,8 +158,12 @@ CONFIGURE_ARGS+= \
 	$(if $(CONFIG_ZABBIX_POSTGRESQL),--with-postgresql) \
 	--with-libevent=$(STAGING_DIR)/usr/include/libevent \
 	--with-libpcre=$(STAGING_DIR)/usr/include \
+	--with-zlib=$(STAGING_DIR)/usr/include \
 	$(if $(CONFIG_ZABBIX_GNUTLS),--with-gnutls="$(STAGING_DIR)/usr") \
 	$(if $(CONFIG_ZABBIX_OPENSSL),--with-openssl="$(STAGING_DIR)/usr")
+
+CONFIGURE_VARS += \
+	ac_cv_header_sys_sysinfo_h=no
 
 MAKE_FLAGS += ARCH="linux"
 
@@ -295,7 +298,7 @@ endef
 
 define Package/zabbix-server-frontend/install
 	$(INSTALL_DIR) $(1)/www/zabbix
-	$(CP) $(PKG_BUILD_DIR)/frontends/php/* $(1)/www/zabbix
+	$(CP) $(PKG_BUILD_DIR)/ui/* $(1)/www/zabbix
 endef
 
 define Package/zabbix-proxy/install

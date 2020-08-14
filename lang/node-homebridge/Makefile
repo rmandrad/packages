@@ -6,12 +6,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NPM_NAME:=homebridge
 PKG_NAME:=node-$(PKG_NPM_NAME)
-PKG_VERSION:=0.4.47
+PKG_VERSION:=1.1.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NPM_NAME)-$(PKG_VERSION).tgz
 PKG_SOURCE_URL:=http://registry.npmjs.org/$(PKG_NPM_NAME)/-/
-PKG_HASH:=c4a77a360f99fbf16247f5f229d29c748c4c54ed790b962ec3dfd5d4cf20a0f0
+PKG_HASH:=ccbd9e2e199a56f3b5749bb58dfad2fd629c3bc5fc55c36cc3f870061108b883
 
 PKG_BUILD_DEPENDS:=node/host
 PKG_USE_MIPS16:=0
@@ -37,6 +37,9 @@ define Package/node-homebridge/description
 endef
 
 NODEJS_CPU:=$(subst powerpc,ppc,$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH)))))
+TMPNPM:=$(shell mktemp -u XXXXXXXXXX)
+
+TARGET_CFLAGS+=$(FPIC)
 
 define Build/Prepare
 	$(INSTALL_DIR) $(PKG_BUILD_DIR)
@@ -50,11 +53,11 @@ define Build/Compile
 	npm_config_build_from_source=true \
 	npm_config_nodedir=$(STAGING_DIR)/usr/ \
 	npm_config_prefix=$(PKG_INSTALL_DIR)/usr/ \
-	npm_config_cache=$(TMP_DIR)/npm-cache \
-	npm_config_tmp=$(TMP_DIR)/npm-tmp \
+	npm_config_cache=$(TMP_DIR)/npm-cache-$(TMPNPM) \
+	npm_config_tmp=$(TMP_DIR)/npm-tmp-$(TMPNPM) \
 	npm install -g $(DL_DIR)/$(PKG_SOURCE)
-	rm -rf $(TMP_DIR)/npm-tmp
-	rm -rf $(TMP_DIR)/npm-cache
+	rm -rf $(TMP_DIR)/npm-tmp-$(TMPNPM)
+	rm -rf $(TMP_DIR)/npm-cache-$(TMPNPM)
 endef
 
 define Package/node-homebridge/install

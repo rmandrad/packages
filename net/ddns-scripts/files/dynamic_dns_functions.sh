@@ -21,7 +21,7 @@
 . /lib/functions/network.sh
 
 # GLOBAL VARIABLES #
-VERSION="2.7.8-6"
+VERSION="2.7.8-14"
 SECTION_ID=""		# hold config's section name
 VERBOSE=0		# default mode is log to console, but easily changed with parameter
 MYPROG=$(basename $0)	# my program call name
@@ -73,23 +73,23 @@ DNS_CHARSET="[@a-zA-Z0-9._-]"
 LUCI_HELPER=$(printf %s "$MYPROG" | grep -i "luci")
 
 # Name Server Lookup Programs
-BIND_HOST=$(which host)
-KNOT_HOST=$(which khost)
-DRILL=$(which drill)
-HOSTIP=$(which hostip)
-NSLOOKUP=$(which nslookup)
+BIND_HOST=$(command -v host)
+KNOT_HOST=$(command -v khost)
+DRILL=$(command -v drill)
+HOSTIP=$(command -v hostip)
+NSLOOKUP=$(command -v nslookup)
 
 # Transfer Programs
-WGET=$(which wget)
-WGET_SSL=$(which wget-ssl)
+WGET=$(command -v wget)
+WGET_SSL=$(command -v wget-ssl)
 
-CURL=$(which curl)
+CURL=$(command -v curl)
 # CURL_SSL not empty then SSL support available
 CURL_SSL=$($CURL -V 2>/dev/null | grep -F "https")
 # CURL_PROXY not empty then Proxy support available
 CURL_PROXY=$(find /lib /usr/lib -name libcurl.so* -exec strings {} 2>/dev/null \; | grep -im1 "all_proxy")
 
-UCLIENT_FETCH=$(which uclient-fetch)
+UCLIENT_FETCH=$(command -v uclient-fetch)
 
 # Global configuration settings
 # allow NON-public IP's
@@ -282,11 +282,11 @@ write_log() {
 	[ $__LEVEL -eq 7 ] && return	# no syslog for debug messages
 	__CMD=$(echo -e "$__CMD" | tr -d '\n' | tr '\t' '     ')        # remove \n \t chars
 	[ $__EXIT  -eq 1 ] && {
-		eval "$__CMD"	# force syslog before exit
+		eval '$__CMD'	# force syslog before exit
 		exit 1
 	}
 	[ $use_syslog -eq 0 ] && return
-	[ $((use_syslog + __LEVEL)) -le 7 ] && eval "$__CMD"
+	[ $((use_syslog + __LEVEL)) -le 7 ] && eval '$__CMD'
 
 	return
 }
@@ -319,16 +319,19 @@ urlencode() {
 # $2	Name of Variable to store script to
 # $3	Name of Variable to store service answer to
 get_service_data() {
+	local __FILE __SERVICE __DATA __ANSWER __URL __SCRIPT __PIPE
+
 	[ $# -ne 3 ] && write_log 12 "Error calling 'get_service_data()' - wrong number of parameters"
 
 	__FILE="/etc/ddns/services"				# IPv4
 	[ $use_ipv6 -ne 0 ] && __FILE="/etc/ddns/services_ipv6"	# IPv6
 
 	# workaround with variables; pipe create subshell with no give back of variable content
-	mkfifo pipe_$$
+	__PIPE="$ddns_rundir/pipe_$$"
+	mkfifo "$__PIPE"
+
 	# only grep without # or whitespace at linestart | remove "
-#	grep -v -E "(^#|^[[:space:]]*$)" $__FILE | sed -e s/\"//g > pipe_$$ &
-	sed '/^#/d; /^[ \t]*$/d; s/\"//g' $__FILE  > pipe_$$ &
+	sed '/^#/d; /^[ \t]*$/d; s/\"//g' "$__FILE" > "$__PIPE" &
 
 	while read __SERVICE __DATA __ANSWER; do
 		if [ "$__SERVICE" = "$service_name" ]; then
@@ -339,11 +342,11 @@ get_service_data() {
 			eval "$1=\"$__URL\""
 			eval "$2=\"$__SCRIPT\""
 			eval "$3=\"$__ANSWER\""
-			rm pipe_$$
+			rm "$__PIPE"
 			return 0
 		fi
-	done < pipe_$$
-	rm pipe_$$
+	done < "$__PIPE"
+	rm "$__PIPE"
 
 	eval "$1=\"\""	# no service match clear variables
 	eval "$2=\"\""
@@ -488,8 +491,8 @@ sanitize_variable() {
 verify_host_port() {
 	local __HOST=$1
 	local __PORT=$2
-	local __NC=$(which nc)
-	local __NCEXT=$($(which nc) --help 2>&1 | grep "\-w" 2>/dev/null)	# busybox nc compiled with extensions
+	local __NC=$(command -v nc)
+	local __NCEXT=$($(command -v nc) --help 2>&1 | grep "\-w" 2>/dev/null)	# busybox nc compiled with extensions
 	local __IP __IPV4 __IPV6 __RUNPROG __PROG __ERR
 	# return codes
 	# 1	system specific error
@@ -533,17 +536,17 @@ verify_host_port() {
 		}
 		# extract IP address
 		if [ -n "$BIND_HOST" -o -n "$KNOT_HOST" ]; then	# use BIND host or Knot host if installed
-			__IPV4=$(cat $DATFILE | awk -F "address " '/has address/ {print $2; exit}' )
-			__IPV6=$(cat $DATFILE | awk -F "address " '/has IPv6/ {print $2; exit}' )
+			__IPV4="$(awk -F "address " '/has address/ {print $2; exit}' "$DATFILE")"
+			__IPV6="$(awk -F "address " '/has IPv6/ {print $2; exit}' "$DATFILE")"
 		elif [ -n "$DRILL" ]; then	# use drill if installed
-			__IPV4=$(cat $DATFILE | awk '/^'"$lookup_host"'/ {print $5}' | grep -m 1 -o "$IPV4_REGEX")
-			__IPV6=$(cat $DATFILE | awk '/^'"$lookup_host"'/ {print $5}' | grep -m 1 -o "$IPV6_REGEX")
+			__IPV4="$(awk '/^'"$__HOST"'/ {print $5}' "$DATFILE" | grep -m 1 -o "$IPV4_REGEX")"
+			__IPV6="$(awk '/^'"$__HOST"'/ {print $5}' "$DATFILE" | grep -m 1 -o "$IPV6_REGEX")"
 		elif [ -n "$HOSTIP" ]; then	# use hostip if installed
-			__IPV4=$(cat $DATFILE | grep -m 1 -o "$IPV4_REGEX")
-			__IPV6=$(cat $DATFILE | grep -m 1 -o "$IPV6_REGEX")
+			__IPV4="$(grep -m 1 -o "$IPV4_REGEX" "$DATFILE")"
+			__IPV6="$(grep -m 1 -o "$IPV6_REGEX" "$DATFILE")"
 		else	# use BusyBox nslookup
-			__IPV4=$(cat $DATFILE | sed -ne "/^Name:/,\$ { s/^Address[0-9 ]\{0,\}: \($IPV4_REGEX\).*$/\\1/p }")
-			__IPV6=$(cat $DATFILE | sed -ne "/^Name:/,\$ { s/^Address[0-9 ]\{0,\}: \($IPV6_REGEX\).*$/\\1/p }")
+			__IPV4="$(sed -ne "/^Name:/,\$ { s/^Address[0-9 ]\{0,\}: \($IPV4_REGEX\).*$/\\1/p }" "$DATFILE")"
+			__IPV6="$(sed -ne "/^Name:/,\$ { s/^Address[0-9 ]\{0,\}: \($IPV6_REGEX\).*$/\\1/p }" "$DATFILE")"
 		fi
 	}
 
@@ -918,7 +921,7 @@ get_local_ip () {
 			[ -n "$__DATA" ] && write_log 7 "Local IP '$__DATA' detected on network '$ip_network'"
 		elif [ -n "$ip_interface" -a "$ip_source" = "interface" ]; then
 			local __DATA4=""; local __DATA6=""
-			if [ -n "$(which ip)" ]; then		# ip program installed
+			if [ -n "$(command -v ip)" ]; then		# ip program installed
 				write_log 7 "#> ip -o addr show dev $ip_interface scope global >$DATFILE 2>$ERRFILE"
 				ip -o addr show dev $ip_interface scope global >$DATFILE 2>$ERRFILE
 				__ERR=$?
@@ -1121,7 +1124,7 @@ get_registered_ip() {
 		__RUNPROG="$__PROG $lookup_host >$DATFILE 2>$ERRFILE"
 		__PROG="hostip"
 	elif [ -n "$NSLOOKUP" ]; then	# last use BusyBox nslookup
-		NSLOOKUP_MUSL=$($(which nslookup) localhost 2>&1 | grep -F "(null)")	# not empty busybox compiled with musl
+		NSLOOKUP_MUSL=$($(command -v nslookup) localhost 2>&1 | grep -F "(null)")	# not empty busybox compiled with musl
 		[ $force_dnstcp -ne 0 ] && \
 			write_log 14 "Busybox nslookup - no support for 'DNS over TCP'"
 		[ -n "$NSLOOKUP_MUSL" -a -n "$dns_server" ] && \

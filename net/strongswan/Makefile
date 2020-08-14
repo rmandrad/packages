@@ -8,14 +8,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=strongswan
-PKG_VERSION:=5.7.2
+PKG_VERSION:=5.8.4
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=http://download.strongswan.org/ http://download2.strongswan.org/
-PKG_HASH:=308e3ba76e2ce2da070e48fcebbe1fa923a27cc71e43bf63917e6f2a889ecc70
-PKG_LICENSE:=GPL-2.0+
+PKG_SOURCE_URL:=https://download.strongswan.org/ https://download2.strongswan.org/
+PKG_HASH:=2d9a57e33813b62d58cba07531c4d5a35c6b823dfe9b8ff7c623b6571f02553c
+PKG_LICENSE:=GPL-2.0-or-later
 PKG_MAINTAINER:=Stijn Tintel <stijn@linux-ipv6.be>
+PKG_CPE_ID:=cpe:/a:strongswan:strongswan
 
 PKG_MOD_AVAILABLE:= \
 	addrblock \
@@ -446,17 +447,12 @@ CONFIGURE_ARGS+= \
 EXTRA_LDFLAGS+= -Wl,-rpath-link,$(STAGING_DIR)/usr/lib
 
 define Package/strongswan/conffiles
-/etc/ipsec.d/
-/etc/ipsec.conf
-/etc/ipsec.secrets
-/etc/ipsec.user
 /etc/strongswan.conf
 /etc/strongswan.d/
 endef
 
 define Package/strongswan/install
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/ipsec.conf $(1)/etc/
 	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/strongswan.conf $(1)/etc/
 	$(INSTALL_DIR) $(1)/usr/lib/ipsec
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/libstrongswan.so.* $(1)/usr/lib/ipsec/
@@ -496,8 +492,16 @@ define Package/strongswan-charon-cmd/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/charon-cmd $(1)/usr/sbin/
 endef
 
+define Package/strongswan-ipsec/conffiles
+/etc/ipsec.d/
+/etc/ipsec.conf
+/etc/ipsec.secrets
+/etc/ipsec.user
+endef
+
 define Package/strongswan-ipsec/install
-	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_DIR) $(1)/etc/ $(1)/usr/sbin
+	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/ipsec.conf $(1)/etc/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/ipsec $(1)/usr/sbin/
 endef
 
@@ -513,6 +517,10 @@ define Package/strongswan-scepclient/install
 	$(CP) $(PKG_INSTALL_DIR)/etc/strongswan.d/scepclient.conf $(1)/etc/strongswan.d/
 	$(INSTALL_DIR) $(1)/usr/lib/ipsec
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/ipsec/scepclient $(1)/usr/lib/ipsec/
+endef
+
+define Package/strongswan-swanctl/conffiles
+/etc/swanctl/
 endef
 
 define Package/strongswan-swanctl/install

@@ -3,17 +3,19 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=softethervpn5
+PKG_VERSION:=5.01.9674
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Andy Walsh <andy.walsh44+github@gmail.com>
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYING
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/SoftEtherVPN/SoftEtherVPN.git
-PKG_SOURCE_DATE:=2019-02-27
-PKG_SOURCE_VERSION:=beef8d68924916d0834c87ceb9ae8eef2c9b1d6c
-PKG_MIRROR_HASH:=8cd27ee1d768c00f816501be925bb971fd62b9cef145e4ac5c731456a86d782c
+PKG_SOURCE_URL:=https://github.com/SoftEtherVPN/SoftEtherVPN/releases/download/$(PKG_VERSION)/
+PKG_SOURCE:=softether-vpn-src-$(PKG_VERSION).tar.gz
+PKG_HASH:=c4dc53f4912605a25c18357b0a0bf6dc059286ca901cb981abdf1a22d1649ddc
+
+HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/SoftEtherVPN-$(PKG_VERSION)
+PKG_BUILD_DIR:=$(BUILD_DIR)/SoftEtherVPN-$(PKG_VERSION)
 
 HOST_BUILD_DEPENDS:=ncurses/host readline/host
 PKG_BUILD_DEPENDS:=softethervpn5/host
@@ -22,7 +24,6 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/nls.mk
 include $(INCLUDE_DIR)/cmake.mk
-
 
 define Package/softethervpn5/Default
   SECTION:=net
@@ -83,6 +84,7 @@ export USE_MUSL=YES
 # BUG: outdated host/include/elf.h
 HOST_CFLAGS += $(FPIC) -DAT_HWCAP2=26
 TARGET_CFLAGS += $(FPIC)
+CMAKE_OPTIONS = -DICONV_LIB_PATH="$(ICONV_PREFIX)/lib"
 
 # static build for host (hamcorebuilder), avoid -fpic on ncurses/host and shared libs can't be found on host
 define Host/Prepare

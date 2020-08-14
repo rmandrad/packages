@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libiio
-PKG_VERSION:=0.16
+PKG_VERSION:=0.19
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/analogdevicesinc/libiio/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=5eb3ec24342eb01c49235a1d8a053462f930835a3002e687371b680a9bb150f6
+PKG_HASH:=81c414d5c47b715d9bc9275b9fabbfd9e9483e60c035f3001b5977932049595d
 
 PKG_LICENSE:=LGPL-2.1
 PKG_LICENSE_FILES:=COPYING.txt
@@ -133,7 +133,7 @@ endef
 
 define Package/libiio/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libiio.so* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libiio.so.* $(1)/usr/lib/
 endef
 
 define Package/iiod/install

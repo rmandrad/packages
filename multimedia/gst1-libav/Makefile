@@ -8,24 +8,21 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gst1-libav
-PKG_VERSION:=1.15.2
-PKG_RELEASE:=2
-
-PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org> \
-		Ted Hess <thess@kitschensync.net>
+PKG_VERSION:=1.17.2
+PKG_RELEASE:=1
 
 PKG_SOURCE:=gst-libav-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://gstreamer.freedesktop.org/src/gst-libav
-PKG_HASH:=96241130cb0067e01925a7cfe084dcf05941f139eb1ab45e5556c3f95120ce49
-
-PKG_LICENSE:=GPL-2.0 LGPL-2.0
-PKG_LICENSE_FILES:=COPYING COPYING.LIB
-
+PKG_HASH:=5c8768e308b547b237700d4003c3a5622eb361914d69ec43b480f1c23ea31752
 PKG_BUILD_DIR:=$(BUILD_DIR)/gst-libav-$(PKG_VERSION)
+
+PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org> \
+		Ted Hess <thess@kitschensync.net>
+PKG_LICENSE:=GPL-2.0-or-later LGPL-2.1-or-later
+PKG_LICENSE_FILES:=COPYING COPYING.LIB
 
 PKG_FIXUP:=autoreconf
 PKG_INSTALL:=1
-
 PKG_USE_MIPS16:=0
 
 GST_VERSION:=1.0
@@ -111,6 +108,7 @@ PKG_CONFIG_DEPENDS:= \
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
+include ../../devel/meson/meson.mk
 
 define Package/gst1-libav
   SECTION:=multimedia
@@ -119,7 +117,7 @@ define Package/gst1-libav
   URL:=https://www.gstreamer.net/modules/gst-libav.html
   DEPENDS:= +libgstreamer1 +gstreamer1-plugins-base \
 	    +gst1-mod-alsa +libgst1audio +libgst1pbutils +libgst1video \
-	    +libbz2 +liblzma
+	    +libbz2 +liblzma +libffmpeg-full
 endef
 
 define Package/gst1-libav/description
@@ -142,8 +140,13 @@ LIBAV_CONFIGURE_DEMUXERS:=$(call FILTER_CONFIG,DEMUXER,demuxer,$(LIBAV_DEMUXERS)
 LIBAV_CONFIGURE_PARSERS:=$(call FILTER_CONFIG,PARSER,parser,$(LIBAV_PARSERS))
 LIBAV_CONFIGURE_PROTOCOLS:=$(call FILTER_CONFIG,PROTOCOL,protocol,$(LIBAV_PROTOCOLS))
 
-# Strip off FPU notation
-REAL_CPU_TYPE:=$(firstword $(subst +, ,$(CONFIG_CPU_TYPE)))
+# Hack to build on mips64.
+ifneq ($(findstring octeonplus,$(CONFIG_CPU_TYPE)),)
+  REAL_CPU_TYPE:=octeon+
+else
+  # Strip off FPU notation.
+  REAL_CPU_TYPE:=$(firstword $(subst +, ,$(CONFIG_CPU_TYPE)))
+endif
 
 CONFIGURE_ARGS += \
 	--disable-Bsymbolic \

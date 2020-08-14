@@ -8,68 +8,35 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=python-cffi
-PKG_VERSION:=1.12.2
+PKG_VERSION:=1.14.1
 PKG_RELEASE:=1
 
-PKG_SOURCE:=cffi-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://files.pythonhosted.org/packages/source/c/cffi
-PKG_HASH:=e113878a446c6228669144ae8a56e268c91b7f1fafae927adc4879d9849e0ea7
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(BUILD_VARIANT)-cffi-$(PKG_VERSION)
+PYPI_NAME:=cffi
+PKG_HASH:=b2a2b0d276a136146e012154baefaea2758ef1f56ae9f4e01c612b0831e0bd2f
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=Jeffery To <jeffery.to@gmail.com>, Alexandru Ardelean <ardeleanalex@gmail.com>
 
-PKG_BUILD_DEPENDS:=libffi/host
-
-HOST_PYTHON_PACKAGE_BUILD_DEPENDS:="cffi==$(PKG_VERSION)"
-HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="cffi==$(PKG_VERSION)"
-
+include ../pypi.mk
 include $(INCLUDE_DIR)/package.mk
-include ../python-package.mk
 include ../python3-package.mk
 
-PKG_UNPACK:=$(HOST_TAR) -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
-
-define Package/python-cffi/Default
+define Package/python3-cffi
   SECTION:=lang
   CATEGORY:=Languages
   SUBMENU:=Python
   TITLE:=C Foreign Function Interface
   URL:=https://cffi.readthedocs.org/
-  DEPENDS:=+libffi
-endef
-
-define Package/python-cffi
-$(call Package/python-cffi/Default)
-  DEPENDS+= \
-      +PACKAGE_python-cffi:python-light \
-      +PACKAGE_python-cffi:python-pycparser
-  VARIANT:=python
-endef
-
-define Package/python3-cffi
-$(call Package/python-cffi/Default)
-  DEPENDS+= \
-      +PACKAGE_python3-cffi:python3-light \
-      +PACKAGE_python3-cffi:python3-pycparser
-  VARIANT:=python3
-endef
-
-define Package/python-cffi/description
-Foreign Function Interface for Python calling C code.
+  DEPENDS:= \
+      +libffi \
+      +python3-light \
+      +python3-pycparser
 endef
 
 define Package/python3-cffi/description
-$(call Package/python-cffi/description)
-.
-(Variant for Python3)
+Foreign Function Interface for Python calling C code.
 endef
-
-$(eval $(call PyPackage,python-cffi))
-$(eval $(call BuildPackage,python-cffi))
-$(eval $(call BuildPackage,python-cffi-src))
 
 $(eval $(call Py3Package,python3-cffi))
 $(eval $(call BuildPackage,python3-cffi))

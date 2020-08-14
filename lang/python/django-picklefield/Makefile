@@ -8,40 +8,38 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=django-picklefield
-PKG_VERSION:=1.1.0
-PKG_RELEASE:=1
+PKG_VERSION:=2.1.1
+PKG_RELEASE:=2
+
+PYPI_NAME:=$(PKG_NAME)
+PKG_HASH:=67a5e156343e3b032cac2f65565f0faa81635a99c7da74b0f07a0f5db467b646
+
+PKG_MAINTAINER:=Alexandru Ardelean <ardeleanalex@gmail.com>
 PKG_LICENSE:=MIT
+PKG_LICENSE_FILES:=LICENSE
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://files.pythonhosted.org/packages/source/d/django-picklefield
-PKG_HASH:=ce7fee5c6558fe5dc8924993d994ccde75bb75b91cd82787cbd4c92b95a69f9c
-
+include ../pypi.mk
 include $(INCLUDE_DIR)/package.mk
-include ../python-package.mk
+include ../python3-package.mk
 
-define Package/django-picklefield
+PYTHON3_PKG_SETUP_VARS:= \
+  PKG_VERSION="$(PKG_VERSION)"
+
+define Package/python3-django-picklefield
   SUBMENU:=Python
   SECTION:=lang
   CATEGORY:=Languages
-  MAINTAINER:=Gergely Kiss <mail.gery@gmail.com>
   TITLE:=Pickled object field for Django
-  URL:=https://github.com/gintas/django-picklefield
-  DEPENDS:=+python +django
+  URL:=https://github.com/gintas/django-picklefield/
+  DEPENDS:= \
+	+python3 \
+	+python3-django1
 endef
 
-define Package/django-picklefield/description
+define Package/python3-django-picklefield/description
   Pickled object field for Django
 endef
 
-define Build/Compile
-	$(call Build/Compile/PyMod,,install --prefix=/usr --root=$(PKG_INSTALL_DIR))
-endef
-
-define Package/django-picklefield/install
-	$(INSTALL_DIR) $(1)$(PYTHON_PKG_DIR)
-	$(CP) \
-	    $(PKG_INSTALL_DIR)$(PYTHON_PKG_DIR)/* \
-	    $(1)$(PYTHON_PKG_DIR)
-endef
-
-$(eval $(call BuildPackage,django-picklefield))
+$(eval $(call Py3Package,python3-django-picklefield))
+$(eval $(call BuildPackage,python3-django-picklefield))
+$(eval $(call BuildPackage,python3-django-picklefield-src))

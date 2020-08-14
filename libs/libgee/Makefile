@@ -6,21 +6,19 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libgee
-PKG_VERSION:=0.20.1
-PKG_RELEASE:=2
-
-PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
-
-PKG_LICENSE:=LGPL-2.1 
-PKG_LICENSE_FILES:=COPYING
+PKG_VERSION:=0.20.3
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=@GNOME/libgee/0.20/
-PKG_HASH:=bb2802d29a518e8c6d2992884691f06ccfcc25792a5686178575c7111fea4630
+PKG_SOURCE_URL:=@GNOME/libgee/0.20
+PKG_HASH:=d0b5edefc88cbca5f1709d19fa62aef490922c6577a14ac4e7b085507911a5de
 
-PKG_FIXUP:=autoreconf
+PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
+PKG_LICENSE:=LGPL-2.1-or-later
+PKG_LICENSE_FILES:=COPYING
+
 PKG_INSTALL:=1
-
+PKG_BUILD_PARALLEL:=1
 PKG_BUILD_DEPENDS:=vala/host
 
 include $(INCLUDE_DIR)/package.mk
@@ -39,7 +37,12 @@ define Package/libgee/decription
 endef
 
 CONFIGURE_ARGS += \
-	--disable-doc
+	--disable-benchmark \
+	--disable-coverage \
+	--disable-doc \
+	--disable-internal-asserts \
+	--disable-introspection \
+	--disable-vala-fatal-warnings
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include/

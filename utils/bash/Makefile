@@ -9,15 +9,16 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bash
 PKG_VERSION:=5.0
-PKG_RELEASE:=2
+PKG_RELEASE:=4
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=@GNU/bash
 PKG_HASH:=b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d
 
-PKG_LICENSE:=GPL-3.0+
+PKG_LICENSE:=GPL-3.0-or-later
 PKG_LICENSE_FILES:=COPYING
 PKG_MAINTAINER:=Marcel Denia <naoir@gmx.net>
+PKG_CPE_ID:=cpe:/a:gnu:bash
 
 PKG_INSTALL:=1
 
@@ -36,6 +37,11 @@ define Package/bash/description
   Bash is an sh-compatible command language interpreter that executes
   commands read from the standard input or from a file. Bash also
   incorporates useful features from the Korn and C shells (ksh and csh).
+endef
+
+define Package/bash/conffiles
+/etc/bash.bashrc
+/etc/bash.bash_logout
 endef
 
 # Bash detects and enables certain features by runtest simple piece of code
@@ -88,6 +94,7 @@ define Package/bash/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/bash $(1)/bin/
 	$(LN) bash $(1)/bin/rbash
+	$(CP) ./files/* $(1)/
 endef
 
 $(eval $(call BuildPackage,bash))

@@ -8,19 +8,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=prosody
-PKG_VERSION:=0.11.2
+PKG_VERSION:=0.11.5
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://prosody.im/downloads/source
-PKG_HASH:=8911f6dc29b9e0c4edf9e61dc23fa22d77bc42c4caf28b809ab843b2f08e4831
+PKG_HASH:=55f8bd65d5d2af61cc739bd6164e4207011e0d2d260cde583071c90d8d85408b
+
 PKG_MAINTAINER:=Thomas Heil <heil@terminal-consulting.de>
 PKG_LICENSE:=MIT/X11
-PKG_BUILD_DEPENDS:=lua/host
 PKG_CPE_ID:=cpe:/a:prosody:prosody
-HOST_BUILD_DEPENDS:=$(PKG_BUILD_DEPENDS)
 
 PKG_INSTALL:=1
+PKG_BUILD_PARALLEL:=1
+PKG_BUILD_DEPENDS:=lua/host
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -30,7 +31,7 @@ define Package/prosody
   SUBMENU:=Instant Messaging
   DEPENDS:=+luafilesystem +libidn +luaexpat +luasec +libopenssl +libidn +liblua +luabitop
   TITLE:=XMPP server
-  URL:=http://prosody.im/
+  URL:=https://prosody.im/
   USERID:=prosody=54:prosody=54
 endef
 
@@ -44,10 +45,10 @@ define Package/prosody/conffiles
 /etc/prosody/prosody.cfg.lua
 endef
 
-TARGET_CFLAGS += $(FPIC) 
+TARGET_CFLAGS += $(FPIC)
+TARGET_LDFLAGS += -shared
 
-TARGET_LDFLAGS += -L$(STAGING_DIR)/usr/lib 
-
+MAKE_FLAGS += LD="$(TARGET_CC)"
 
 define Build/Configure
 	# this is *NOT* GNU autoconf stuff
@@ -57,17 +58,11 @@ define Build/Configure
 		--with-lua-include="$(STAGING_DIR)/usr/include" \
 		--with-lua-lib="$(STAGING_DIR)/usr/lib" \
 		--cflags="$(TARGET_CFLAGS)" \
-		--ldflags="$(TARGET_LDFLAGS) -llua -lm -ldl -shared" \
+		--ldflags="$(TARGET_LDFLAGS)" \
 		--c-compiler="$(CC)" \
-		--linker="$(LD)" \
 		--datadir="/etc/prosody/data" \
 	)
 endef
-#	LDFLAGS="$(TARGET_LDFLAGS) -llua -lm -ldl" \
-
-MAKE_FLAGS += \
-	CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -std=gnu99" \
-	PREFIX="/usr" \
 
 define Package/prosody/install
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -110,10 +105,10 @@ define Package/prosody/install
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/prosody/net/websocket/*.lua $(1)/usr/lib/prosody/net/websocket/
 	$(INSTALL_DIR) $(1)/usr/lib/prosody/util
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/prosody/util/*.lua $(1)/usr/lib/prosody/util/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/prosody/util/*.so $(1)/usr/lib/prosody/util/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/prosody/util/*.so $(1)/usr/lib/prosody/util/
 	$(INSTALL_DIR) $(1)/usr/lib/prosody/util/sasl
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/prosody/util/sasl/*.lua $(1)/usr/lib/prosody/util/sasl/
-	#$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/prosody/util/sasl/*.so $(1)/usr/lib/prosody/util/sasl/
+	#$(CP) $(PKG_INSTALL_DIR)/usr/lib/prosody/util/sasl/*.so $(1)/usr/lib/prosody/util/sasl/
 endef
 
 define Package/prosody/postinst
@@ -124,7 +119,7 @@ define Package/prosody/postinst
 		paxctl  -v /usr/bin/ > /dev/null  2>&1
 		[ $$? -ne 0 ] && {
 			cp /usr/bin/lua /tmp
-			paxctl -c -m /tmp/lua > /dev/null  2>&1 
+			paxctl -c -m /tmp/lua > /dev/null  2>&1
 			cp -f /tmp/lua /usr/bin/lua
 		}
 	}

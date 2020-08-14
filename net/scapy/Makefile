@@ -8,17 +8,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=scapy
-PKG_VERSION:=2.4.0
-PKG_RELEASE:=1
-PKG_LICENSE:=GPL-2.0
-PKG_LICENSE_FILES:=PKG-INFO
+PKG_VERSION:=2.4.3
+PKG_RELEASE:=2
+PKG_LICENSE:=GPL-2.0-only
+PKG_LICENSE_FILES:=LICENSE
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/secdev/scapy/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=3836c62c33dd3f7c1ae30f5c2c1ab8078e4e32f5bf9c8be758dbaafe1c6a580e
+PYPI_NAME:=$(PKG_NAME)
+PKG_HASH:=e2f8d11f6a941c14a789ae8b236b27bd634681f1b29b5e893861e284d234f6b0
 
+include ../../lang/python/pypi.mk
 include $(INCLUDE_DIR)/package.mk
-include ../../lang/python/python-package.mk
+include ../../lang/python/python3-package.mk
 
 define Package/scapy
   SECTION:=net
@@ -26,7 +26,7 @@ define Package/scapy
   TITLE:=Interactive packet manipulation tool and network scanner
   MAINTAINER:=W. Michael Petullo <mike@flyn.org>
   URL:=https://scapy.net/
-  DEPENDS:=+python
+  DEPENDS:=+python3
 endef
 
 define Package/scapy/description
@@ -36,19 +36,6 @@ define Package/scapy/description
   requests and replies, and much more.
 endef
 
-define Build/Compile
-	$(call Build/Compile/PyMod,., \
-		install --prefix="/usr" --root="$(PKG_INSTALL_DIR)", \
-	)
-endef
-
-define Package/scapy/install
-	$(INSTALL_DIR) $(1)$(PYTHON_PKG_DIR)
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(CP) \
-		$(PKG_INSTALL_DIR)$(PYTHON_PKG_DIR)/* \
-		$(1)$(PYTHON_PKG_DIR)/
-	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
-endef
-
+$(eval $(call Py3Package,scapy))
 $(eval $(call BuildPackage,scapy))
+$(eval $(call BuildPackage,scapy-src))

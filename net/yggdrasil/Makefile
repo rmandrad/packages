@@ -1,16 +1,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=yggdrasil
-PKG_VERSION:=0.3.5
-PKG_RELEASE:=4
+PKG_VERSION:=0.3.14
+PKG_RELEASE:=2
 
-PKG_SOURCE_URL:=https://codeload.github.com/yggdrasil-network/yggdrasil-go/tar.gz/v$(PKG_VERSION)?
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=2c69029adeb053ad049e90f1e4b7efa986094779868da77464d3c869984e861b
+PKG_SOURCE_URL:=https://codeload.github.com/yggdrasil-network/yggdrasil-go/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=e8579a04bf289434e7b8caaf621e2c0b853e83cc06f136c4f9e4bfc667df5a27
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-go-$(PKG_VERSION)
 
-PKG_LICENSE:=GPL-3.0
 PKG_MAINTAINER:=William Fleurant <meshnet@protonmail.com>
+PKG_LICENSE:=LGPL-3.0-only
+PKG_LICENSE_FILES:=LICENSE
 
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
@@ -20,8 +21,8 @@ GO_PKG:=github.com/yggdrasil-network/yggdrasil-go
 GO_PKG_BUILD_PKG:=github.com/yggdrasil-network/yggdrasil-go/cmd/...
 
 GO_PKG_LDFLAGS_X:= \
-  github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil.buildName=yggdrasil-openwrt \
-  github.com/yggdrasil-network/yggdrasil-go/src/yggdrasil.buildVersion=$(PKG_VERSION)
+  github.com/yggdrasil-network/yggdrasil-go/src/version.buildName=yggdrasil-openwrt \
+  github.com/yggdrasil-network/yggdrasil-go/src/version.buildVersion=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
@@ -32,7 +33,7 @@ define Package/yggdrasil
 	SUBMENU:=Routing and Redirection
 	TITLE:=Yggdrasil supports end-to-end encrypted IPv6 networks
 	URL:=https://yggdrasil-network.github.io/
-	DEPENDS:=$(GO_ARCH_DEPENDS) @IPV6 +kmod-tun
+	DEPENDS:=$(GO_ARCH_DEPENDS) @IPV6 +kmod-tun +dkjson +libuci-lua
 endef
 
 define Package/yggdrasil/description
@@ -43,6 +44,10 @@ define Package/yggdrasil/description
  allow advanced link aggregation bonding on per-stream basis.
  In turn, a single stream will span across multiple network
  interfaces simultaneously with much greater throughput.
+endef
+
+define Package/yggdrasil/conffiles
+/etc/config/yggdrasil
 endef
 
 define Package/yggdrasil/install
@@ -57,6 +62,10 @@ define Package/yggdrasil/install
 
 	$(INSTALL_BIN) \
 		$(GO_PKG_BUILD_BIN_DIR)/yggdrasilctl \
+		$(1)/usr/sbin
+
+	$(INSTALL_BIN) \
+		./files/ygguci \
 		$(1)/usr/sbin
 
 	$(INSTALL_BIN) \
